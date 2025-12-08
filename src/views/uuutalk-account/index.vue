@@ -1,33 +1,26 @@
 <template>
 	<AppPage>
 		<n-card style="margin-bottom: 16px;">
-			<n-button ghost mr-16 @click="showQRCodeDrawer">
-				添加Yuni账户
-			</n-button>
-			<n-button type="info" ghost mr-16 @click="syncGroupSelectedAction">
-				更新群组数据
-			</n-button>
-			<n-button type="info" ghost mr-16 @click="syncFriendSelectedAction">
-				更新好友数据
-			</n-button>
-			<n-button type="warning" ghost mr-16 @click="showSetStickerViewAction">
-				大头像设置
-			</n-button>
-			<n-button type="warning" ghost mr-16 @click="showDefaultViewAction">
-				自动回复
-			</n-button>
-			<n-button type="warning" ghost mr-16 @click="showWelcomeMessageViewAction">
-				欢迎语设置
-			</n-button>
-			<n-button type="error" ghost mr-16 @click="cleanStickerAction">
-				删除大头像
-			</n-button>
-			<n-button type="error" ghost mr-16 @click="cleanWelcomeMessageAction">
-				删除欢迎语
-			</n-button>
-			<n-button type="error" ghost mr-16 @click="deleteSelectedAction">
-				删除
-			</n-button>
+			<n-flex>
+				<n-dropdown trigger="click" :options="addUUUTalkAccountBtnOptions" @select="addUUUTalkAccountBtnHandleSelect">
+					<n-button ghost>添加UUUTalk账户</n-button>
+				</n-dropdown>
+				<n-button type="info" ghost @click="syncGroupSelectedAction">
+					更新账户数据
+				</n-button>
+				<n-button type="warning" ghost @click="showDefaultViewAction">
+					自动回复
+				</n-button>
+				<n-button type="warning" ghost @click="showWelcomeMessageViewAction">
+					欢迎语设置
+				</n-button>
+				<n-button type="error" ghost @click="cleanWelcomeMessageAction">
+					删除欢迎语
+				</n-button>
+				<n-button type="error" ghost @click="deleteSelectedAction">
+					删除
+				</n-button>
+			</n-flex>
 		</n-card>
 		<n-data-table 
 			:columns="columns" 
@@ -143,36 +136,64 @@
 			</n-upload>
 		</n-modal>
 
-		<n-modal
-			v-model:show="showStickerView"
-			:mask-closable="false"
-			preset="dialog"
-			title="设置大头像"
-			positive-text="确认"
-			negative-text="取消"
-			@positive-click="setStickerSelectedAction"
-			@negative-click="onNegativeClick">
-			<n-upload
-				accept=".jpeg,.jpg,.png"
-				directory-dnd
-				@finish="uploadSetStickerImageFinish"
-				:action="uploadUrl"
-				:headers="uploadHeaders"
-				:max="1">
-				<n-upload-dragger>
-				<div style="margin-bottom: 12px">
-					<TheIcon icon="mdi:cloud-upload" :size="36" />
-				</div>
-				<n-text style="font-size: 16px">
-					点击或者拖动文件到该区域来上传
-				</n-text>
-				<n-p depth="3" style="margin: 8px 0 0 0">
-					只支持PNG、JPG、JPEG三种格式的图片
-				</n-p>
-				</n-upload-dragger>
-			</n-upload>
-			<p style="font-size: 14px; color: red">大头像模式下，群发任务不能添加图片任务。</p>
-		</n-modal>
+		<n-drawer v-model:show="showAddAccountByPhoneView" :width="520">
+			<n-drawer-content closable>
+				<template #header>
+					添加UUUTalk账户
+				</template>
+				<template #default>
+					<n-form ref="createFormRef" :model="createAccount" label-position="top" label-width="auto">
+						<n-form-item label="上号须知">
+							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您Yuni账户比较多建议联系客服购买独立线路。</p>
+						</n-form-item>
+						<n-form-item label="用户套餐">
+							<br />
+							<n-radio-group v-model:value="selectedUserPlanIndex">
+								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
+									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
+								</n-radio>
+							</n-radio-group>
+						</n-form-item>
+						<n-form-item label="用户消息服务器">
+							<br />
+							<n-radio-group v-model:value="selectedTransportServerIndex">
+								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
+									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
+								</n-radio>
+							</n-radio-group>
+						</n-form-item>
+						<n-form-item label="手机号" prop="phone" required>
+							<n-input-group>
+								<n-select style="width: 110px" v-model:value="createAccount.region" filterable
+									placeholder="请选择" :options="countryList">
+								</n-select>
+								<n-input placeholder="请输入手机号" v-model:value="createAccount.phone"></n-input>
+							</n-input-group>
+						</n-form-item>
+						<n-form-item label="密码" prop="password" required>
+							<n-input
+								type="password"
+								show-password-on="mousedown"
+								placeholder="请输入密码"
+								v-model:value="createAccount.password"
+								/>
+						</n-form-item>
+						<n-form-item label="验证吗" prop="code" required>
+							<n-input-group>
+								<n-input placeholder="请输入验证码" v-model:value="createAccount.code"></n-input>
+								<n-button ghost :loading="sendCodeBtnLoading" @click="sendCodeAction">
+									{{ getSmsCodeText }}
+								</n-button>
+							</n-input-group>
+						</n-form-item>
+					</n-form>
+				</template>
+				<template #footer>
+					<n-button mr-16 @click="showAddAccountByPhoneView = false">取消</n-button>
+					<n-button type="success" :loading="submitLoading" ghost @click="addAccountByPhoneAction">保存</n-button>
+				</template>
+			</n-drawer-content>
+		</n-drawer>
 
 		<n-drawer v-model:show="showQRCodeView" :width="520">
 			<n-drawer-content closable>
@@ -586,7 +607,33 @@ const yuniChatColumns = ref([
 	}
 ]);
 
-const userStore = useUserStore()
+const addUUUTalkAccountBtnOptions = [
+	{
+		label: '手机登录',
+		key: 'loginByPhone'
+	},
+	{
+		label: '邮箱登录',
+		key: 'loginByMail'
+	},
+	{
+		label: '扫码登录',
+		key: 'loginByQRCode'
+	},
+]
+
+const countryList = ref();
+const countryCodeList = ref(["+86"]);
+const createAccount = ref({
+	uuid: uuidv4(),
+	region: '0086',
+	phone: '',
+	password: '',
+	code: '',
+});
+const getSmsCodeText = ref("点击发送验证码");
+const timeCount = ref(20);
+
 const yuniAccountList = ref([]);
 const yuniChatList = ref([]);
 const transportServerList = ref([]);
@@ -611,9 +658,12 @@ const defaultText = ref('')
 const defaultImage = ref('')
 const showStickerView = ref(false)
 const stickerImage = ref('')
+const showAddAccountByPhoneView = ref(false)
+const showAddAccountByMailView = ref(false)
 const showQRCodeView = ref(false)
 const qrcodeUrl = ref('')
 const currentUuid = ref('')
+let interval = null;
 let checkQRCodeTimer = null
 
 // 生成无连字符的UUID
@@ -624,11 +674,53 @@ onMounted(
 		uploadHeaders.value = {
 			Authorization: getToken(),
 		}
-		loadYuniAccountAction()
+		loadAccountAction()
+		loadCountryList()
 		loadUserPlanAction()
 		loadTransportServerAction()
 	}
 )
+
+onUnmounted(() => {
+	if (interval) {
+		clearInterval(interval)
+		interval = null
+	}
+	if (checkQRCodeTimer) {
+		clearTimeout(checkQRCodeTimer)
+		checkQRCodeTimer = null
+	}
+});
+
+const convertPhoneCode = (str) => {
+  if (str.startsWith('+')) {
+    return str.replace('+', '00');
+  }
+  return str;
+}
+
+const loadCountryList = () => {
+	let temp = []
+	for (let item of countryCodeList.value) {
+		temp.push({
+			label: item,
+			value: convertPhoneCode(item),
+		})
+	}
+	countryList.value = temp
+}
+
+const addUUUTalkAccountBtnHandleSelect = (key) => {
+	if ('loginByPhone' === key) {
+		showAddAccountByPhoneView.value = true
+	}
+	if ('loginByMail' === key) {
+		showAddAccountByMailView.value = true
+	}
+	if ('loginByQRCode' === key) {
+		showQRCodeView.value = true
+	}
+}
 
 const loadTransportServerAction = async () => {
 	let result = await api.transportServerList()
@@ -660,6 +752,60 @@ const loadUserPlanAction = async () => {
 	}
 }
 
+const addAccountByPhoneAction = async () => {
+	if (createAccount.value.phone === '') {
+		$message.error('请输入手机号')
+		return
+	}
+	if (createAccount.value.password === '') {
+		$message.error('请输入密码')
+		return
+	}
+	if (createAccount.value.code === '') {
+		$message.error('请输入验证码')
+		return
+	}
+
+}
+
+const sendCodeAction = async () => {
+	if (createAccount.value.phone === '') {
+		$message.error('请输入手机号')
+		return
+	}
+	if (createAccount.value.password === '') {
+		$message.error('请输入密码')
+		return
+	}
+	if (submitLoading.value || getSmsCodeText.value !== '点击发送验证码') {
+		return;
+	}
+	submitLoading.value = true
+	try {
+		const resp = await api.sendVerifiedSms({
+			uuid: createAccount.value.uuid,
+			phone: createAccount.value.phone,
+			password: createAccount.value.password
+		})
+		$message.success('发送成功')
+		submitLoading.value = false
+		let time = 0;
+		interval = setInterval(() => {
+			time++;
+			if (time >= timeCount.value) {
+				clearInterval(interval);
+				interval = null;
+				getSmsCodeText.value = '点击发送验证码'
+				return;
+			}
+			getSmsCodeText.value = timeCount.value - time + 's';
+		}, 1000)
+	} catch (error) {
+		console.error(error)
+	}
+	submitLoading.value = false
+}
+
 const syncGroupSelectedAction = async () => {
 	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
 		$message.error('请先选择Yuni账户')
@@ -675,7 +821,7 @@ const syncGroupSelectedAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const syncFriendSelectedAction = async () => {
@@ -693,7 +839,7 @@ const syncFriendSelectedAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const syncSelectedAction = async () => {
@@ -711,7 +857,7 @@ const syncSelectedAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const showDefaultViewAction = () => {
@@ -789,7 +935,7 @@ const defaultMessageSelectedAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const setStickerSelectedAction = async () => {
@@ -814,10 +960,10 @@ const setStickerSelectedAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
-const loadYuniAccountAction = async () => {
+const loadAccountAction = async () => {
 	tableLoading.value = true
 	let result = await api.list()
 	tableLoading.value = false
@@ -835,7 +981,7 @@ const syncGroupAction = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -850,7 +996,7 @@ const syncFriendAction = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -865,7 +1011,7 @@ const syncAction = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -880,7 +1026,7 @@ const approvalFriendAction = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -936,7 +1082,7 @@ const changeImModeYuniAccount = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -954,7 +1100,7 @@ const destroyYuniAccount = async (row, refresh = true) => {
 		console.error(error)
 	}
 	if (refresh) {
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -973,7 +1119,7 @@ const deleteYuniAccount = async (row, refresh = true) => {
 	}
 	if (refresh) {
 		loadUserPlanAction()
-		loadYuniAccountAction();
+		loadAccountAction();
 	}
 }
 
@@ -1039,7 +1185,7 @@ const saveWelcomeMessageAction = async () => {
 	showWelcomeMessageView.value = false
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const deleteWelcomeMessage = (index) => {
@@ -1066,7 +1212,7 @@ const deleteSelectedAction = async () => {
 	showProgress.value = false
 	selectedYuniAccountList.value = []
 	loadUserPlanAction()
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const cleanStickerAction = async () => {
@@ -1088,7 +1234,7 @@ const cleanStickerAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
+	loadAccountAction();
 }
 
 const cleanWelcomeMessageAction = async () => {
@@ -1110,11 +1256,7 @@ const cleanWelcomeMessageAction = async () => {
 	}
 	showProgress.value = false
 	selectedYuniAccountList.value = []
-	loadYuniAccountAction();
-}
-
-const showQRCodeDrawer = async () => {
-	showQRCodeView.value = true
+	loadAccountAction();
 }
 
 const getQRCode = async () => {
@@ -1162,7 +1304,7 @@ const startCheckQRCodeStatus = () => {
 				showQRCodeView.value = false
 				$message.success('扫码成功')
 				loadUserPlanAction()
-				loadYuniAccountAction()
+				loadAccountAction()
 				return
 			}
 			// 如果抽屉已关闭，不再继续检查
@@ -1191,13 +1333,6 @@ watch(showQRCodeView, (newVal) => {
 		checkQRCodeTimer = null
 		// 关闭抽屉时清空二维码URL
 		qrcodeUrl.value = ''
-	}
-})
-
-onUnmounted(() => {
-	if (checkQRCodeTimer) {
-		clearTimeout(checkQRCodeTimer)
-		checkQRCodeTimer = null
 	}
 })
 

@@ -106,7 +106,7 @@
             show-password-on="mousedown"
             placeholder="请输入验证码"
             :maxlength="20" />
-          <img :src="codeImageUrl" h-50/>
+          <img :src="codeImageUrl" h-50 @click="initCodeImage"/>
         </n-input-group>
       </div>
 
@@ -168,6 +168,7 @@ function initLoginInfo() {
 }
 
 function initCodeImage() {
+  loginInfo.value.uuid = uuidv4();
   codeImageUrl.value = `${import.meta.env.VITE_BASE_API}/v1/user/registerVerifyImage?uuid=${loginInfo.value.uuid}`
 }
 

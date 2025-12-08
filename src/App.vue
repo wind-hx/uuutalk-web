@@ -4,7 +4,7 @@
       <component :is="Component" />
     </router-view>
     <n-watermark
-      content="云控群发, xngram.com"
+      content="云控群发"
       cross
       fullscreen
       :font-size="22"

@@ -5,6 +5,7 @@ export default {
     list: () => request.get('/v1/uuuTalkAccount/list'),
     transportServerList: () => request.get('/v1/transportServer/query'),
     userPlanList: () => request.get('/v1/userPlan/query'),
+    sendVerifiedSms: (data) => request.post('/v1/uuuTalkAccount/sendCodeByPhone', data),
     createUUUTalkAccount: (data) => request.post('/v1/uuuTalkAccount/save', data),
     syncGroup: (id) => request.get(`/v1/uuuTalkAccount/syncGroup?id=${id}`),
     syncFriend: (id) => request.get(`/v1/uuuTalkAccount/syncFriend?id=${id}`),

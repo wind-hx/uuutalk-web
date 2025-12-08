@@ -559,7 +559,7 @@ const sendRecordColumns = ref([
 		key: "status",
 		width: 120,
 		render(row) {
-			if (1 === row.status || row.result.indexOf('request timeout') > -1 ) {
+			if (1 === row.status) {
 				return h(
 					NTag,
 					{
@@ -588,7 +588,7 @@ const sendRecordColumns = ref([
 			return h(
 				NEllipsis,
 				{  },
-				{ default: () => row.result.indexOf('request timeout') > -1 ? '成功了' : row.result }
+				{ default: () => row.result }
 			)
 		}
 	},

@@ -18,26 +18,6 @@
         </div>
       </n-card>
 
-      <n-card title="当前套餐" size="small" :segmented="true" mt-15 rounded-10>
-        <div flex flex-wrap justify-between>
-          <n-card
-            v-for="(item, index) in userPlanList"
-            :key="index"
-            class="mb-10 mt-10 w-260 flex-shrink-0 cursor-pointer"
-            hover:card-shadow
-            :title="item.title"
-            size="small">
-            <p op-60 style="color: red; font-size: 12px;"><strong>[过期时间: {{ item.expire }}]</strong></p>
-            <p op-60>可添加{{ item.yuniAccountTotal }}个Yuni账户✅</p>
-            <p op-60>群发任务✅</p>
-            <p op-60>单群发任务消息数{{ item.taskSendMessageTotal }}✅</p>
-            <p op-60>自动通过好友申请✅</p>
-            <p op-60>私信自动回复✅</p>
-            <p op-60>批量修改账户信息✅</p>
-          </n-card>
-        </div>
-      </n-card>
-
       <n-card title="套餐列表（联系客服购买套餐）" size="small" :segmented="true" mt-15 rounded-10>
         <div flex flex-wrap justify-between>
           <n-card
@@ -76,7 +56,6 @@ const userPlanList = ref([])
 onMounted(
 	() => {
     loadUserPlanList()
-		loadStatistic()
     loadUserInfo()
 	}
 )
