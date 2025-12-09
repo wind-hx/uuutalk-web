@@ -198,18 +198,18 @@
 		<n-drawer v-model:show="showQRCodeView" :width="520">
 			<n-drawer-content closable>
 				<template #header>
-					扫码添加Yuni账户
+					扫码添加UUUTalk账户
 				</template>
 				<template #default>
 					<n-form ref="createFormRef" :model="createTgAccount" label-position="top" label-width="auto">
 						<n-form-item label="上号须知">
-							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您Yuni账户比较多建议联系客服购买独立线路。</p>
+							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
 						</n-form-item>
 						<n-form-item label="用户套餐">
 							<br />
 							<n-radio-group v-model:value="selectedUserPlanIndex">
 								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.title }}:({{ item.yuniAccountCount }}/{{ item.yuniAccountTotal }})
+									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
 								</n-radio>
 							</n-radio-group>
 						</n-form-item>
@@ -217,7 +217,7 @@
 							<br />
 							<n-radio-group v-model:value="selectedTransportServerIndex">
 								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.tag }}:当前账户数量 {{ item.yuniAccountCount }}
+									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
 								</n-radio>
 							</n-radio-group>
 						</n-form-item>
@@ -230,7 +230,7 @@
 								:size="200"
 							/>
 							<div style="margin-top: 16px;">
-								<n-text>请使用Yuni APP扫描二维码登录</n-text>
+								<n-text>请使用UUUTalk APP扫描二维码登录</n-text>
 							</div>
 						</div>
 					</n-form>
@@ -324,6 +324,17 @@ const columns = ref([
 		title: "手机号",
 		key: "phone",
 		width: 120,
+		render(row) {
+			return row.phone === '' ? '--' : row.phone;
+		}
+	},
+	{
+		title: "邮箱",
+		key: "mail",
+		width: 120,
+		render(row) {
+			return row.mail === '' ? '--' : row.mail;
+		}
 	},
 	{
 		title: "所属套餐",
@@ -431,21 +442,6 @@ const columns = ref([
 				NEllipsis,
 				{  },
 				{ default: () => '' === row.causeDisconnection ? '无' : row.causeDisconnection }
-			)
-		}
-	},
-	{
-		title: "IM模式",
-		key: "imMode",
-		width: 100,
-		render(row) {
-			return h(
-				NTag,
-				{
-					size: 'small',
-					type: 'warning'
-				},
-				{ default: () => row.imMode }
 			)
 		}
 	},
@@ -663,6 +659,7 @@ const showAddAccountByMailView = ref(false)
 const showQRCodeView = ref(false)
 const qrcodeUrl = ref('')
 const currentUuid = ref('')
+const currentQRCodeUuid = ref('')
 let interval = null;
 let checkQRCodeTimer = null
 
@@ -725,12 +722,12 @@ const addUUUTalkAccountBtnHandleSelect = (key) => {
 const loadTransportServerAction = async () => {
 	let result = await api.transportServerList()
 	transportServerList.value = result.data
-	let yuniAccountCount = 999999;
+	let uuuTalkAccountCount = 999999;
 	for (let i = 0; i < transportServerList.value.length; i++) {
 		if (transportServerList.value[i].enable) {
-			if (transportServerList.value[i].yuniAccountCount < yuniAccountCount) {
+			if (transportServerList.value[i].uuuTalkAccountCount < uuuTalkAccountCount) {
 				selectedTransportServerIndex.value = i;
-				yuniAccountCount = transportServerList.value[i].yuniAccountCount;
+				uuuTalkAccountCount = transportServerList.value[i].uuuTalkAccountCount;
 			}
 		}
 	}
@@ -742,7 +739,7 @@ const loadUserPlanAction = async () => {
 	const currentDate = new Date();
 	for (let i = 0; i < userPlanList.value.length; i++) {
 		const targetDate = new Date(userPlanList.value[i].expire.replace(" ", "T"));
-		if (targetDate > currentDate && userPlanList.value[i].yuniAccountCount < userPlanList.value[i].yuniAccountTotal) {
+		if (targetDate > currentDate && userPlanList.value[i].uuuTalkAccountCount < userPlanList.value[i].uuuTalkAccountTotal) {
 			selectedUserPlanIndex.value = i
 			userPlanList.value[i].enable = true
 		} else {
@@ -1262,7 +1259,7 @@ const cleanWelcomeMessageAction = async () => {
 const getQRCode = async () => {
 	currentUuid.value = generateUuid()
 	try {
-		const res = await api.getQRCode({
+		const res = await api.getLoginQRCode({
 			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
 			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
 			uuid: currentUuid.value,
@@ -1271,7 +1268,8 @@ const getQRCode = async () => {
 			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
 		})
 		if (res.code === 200) {
-			qrcodeUrl.value = res.data
+			qrcodeUrl.value = res.data.qrcode
+			currentQRCodeUuid.value = res.data.uuid
 			startCheckQRCodeStatus()
 		} else {
 			$message.error('获取二维码失败')
@@ -1290,22 +1288,25 @@ const startCheckQRCodeStatus = () => {
 	
 	const check = async () => {
 		try {
-			const res = await api.checkQRCodeStatus({
+			const res = await api.checkLoginQRCode({
 				userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
 				userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
 				uuid: currentUuid.value,
+				qrCodeUUID: currentQRCodeUuid.value,
 				serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
 				serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
 				serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
 			})
 			if (res.code === 200 && res.data !== '') {
-				clearInterval(checkQRCodeTimer)
-				checkQRCodeTimer = null
-				showQRCodeView.value = false
-				$message.success('扫码成功')
-				loadUserPlanAction()
-				loadAccountAction()
-				return
+				if (res.data.status === 'authed') {
+					clearInterval(checkQRCodeTimer)
+					checkQRCodeTimer = null
+					showQRCodeView.value = false
+					$message.success('扫码成功')
+					loadUserPlanAction()
+					loadAccountAction()
+					return
+				}
 			}
 			// 如果抽屉已关闭，不再继续检查
 			if (!showQRCodeView.value) {

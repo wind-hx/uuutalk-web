@@ -6,7 +6,12 @@ export default {
     transportServerList: () => request.get('/v1/transportServer/query'),
     userPlanList: () => request.get('/v1/userPlan/query'),
     sendVerifiedSms: (data) => request.post('/v1/uuuTalkAccount/sendCodeByPhone', data),
-    createUUUTalkAccount: (data) => request.post('/v1/uuuTalkAccount/save', data),
+    getLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/getLoginQRCode', data),
+    checkLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/checkLoginQRCode', data),
+    loginAuthCode: (data) => request.post('/v1/uuuTalkAccount/loginAuthCode', data),
+
+
+
     syncGroup: (id) => request.get(`/v1/uuuTalkAccount/syncGroup?id=${id}`),
     syncFriend: (id) => request.get(`/v1/uuuTalkAccount/syncFriend?id=${id}`),
     sync: (id) => request.get(`/v1/uuuTalkAccount/sync?id=${id}`),
@@ -24,6 +29,4 @@ export default {
     cleanSticker: (id) => request.get(`/v1/uuuTalkAccount/cleanSticker?id=${id}`),
     welcomeMessage: (data) => request.post('/v1/uuuTalkAccount/welcomeMessage', data),
     cleanWelcomeMessage: (id) => request.get(`/v1/uuuTalkAccount/cleanWelcomeMessage?id=${id}`),
-    getQRCode: (data) => request.post(`/v1/uuuTalkAccount/getQRCode`, data),
-    checkQRCodeStatus: (data) => request.post(`/v1/uuuTalkAccount/checkQRCode`, data),
 }
