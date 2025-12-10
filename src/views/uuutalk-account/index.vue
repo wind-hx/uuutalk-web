@@ -5,11 +5,14 @@
 				<n-dropdown trigger="click" :options="addUUUTalkAccountBtnOptions" @select="addUUUTalkAccountBtnHandleSelect">
 					<n-button ghost>添加UUUTalk账户</n-button>
 				</n-dropdown>
-				<n-button type="info" ghost @click="syncGroupSelectedAction">
+				<n-button type="info" ghost @click="syncSelectedAction">
 					更新账户数据
 				</n-button>
 				<n-button type="warning" ghost @click="showDefaultViewAction">
 					自动回复
+				</n-button>
+				<n-button type="error" ghost @click="cleanDefaultMessageAction">
+					删除自动回复
 				</n-button>
 				<n-button type="warning" ghost @click="showWelcomeMessageViewAction">
 					欢迎语设置
@@ -24,15 +27,15 @@
 		</n-card>
 		<n-data-table 
 			:columns="columns" 
-			:data="yuniAccountList" 
-			:pagination="yuniAccountPagination" 
+			:data="accountList" 
+			:pagination="accountPagination" 
 			:max-height="480"
 			:scroll-x="1800" 
 			:loading="tableLoading" 
 			:row-key="(row) => row"
-			v-model:checked-row-keys="selectedYuniAccountList"/>
+			v-model:checked-row-keys="selectedAccountList"/>
 
-		<n-drawer v-model:show="showYuniAccountView" :width="720">
+		<n-drawer v-model:show="showAccountView" :width="720">
 			<n-drawer-content closable>
 				<template #header>
 					账户详情
@@ -40,30 +43,35 @@
 				<template #default>
 					<n-descriptions label-placement="top" bordered :column="3">
 						<n-descriptions-item label="昵称">
-							{{ selectedYuniAccount.nickname || '--' }}
+							{{ selectedAccount.nickname || '--' }}
 						</n-descriptions-item>
 						<n-descriptions-item label="手机号">
-							{{ selectedYuniAccount.phone || '--' }}
+							{{ selectedAccount.phone || '--' }}
 						</n-descriptions-item>
 						<n-descriptions-item label="所在服务器">
-							<n-tag size="small" type="info">{{ selectedYuniAccount.serverTag || '--' }}</n-tag>
+							<n-tag size="small" type="info">{{ selectedAccount.serverTag || '--' }}</n-tag>
 						</n-descriptions-item>
 						<n-descriptions-item label="状态">
-							<n-tag v-if="selectedYuniAccount.status" size="small" type="success">已认证</n-tag>
+							<n-tag v-if="selectedAccount.status" size="small" type="success">已认证</n-tag>
 							<n-tag v-else size="small" type="warning">未认证</n-tag>
 						</n-descriptions-item>
-						<n-descriptions-item label="自动回复文本">
-							{{ selectedYuniAccount.defaultReply || '--' }}
-						</n-descriptions-item>
-						<n-descriptions-item label="自动回复图片">
-							<n-image 
-								v-if="selectedYuniAccount.defaultReplyImage"
-								width="100"
-								:src="selectedYuniAccount.defaultReplyImage"/>
-							<div v-else>--</div>
+						<n-descriptions-item label="自动回复">
+							<div v-if="selectedAccount.defaultMessage" v-for="(item, index) in JSON.parse(selectedAccount.defaultMessage)" :key="index">
+								<n-tag size="small" type="info" v-if="item.type === 0">
+									{{ item.text }}
+								</n-tag>
+								<n-image 
+									v-if="item.type === 1"
+									width="100"
+									:src="item.image"
+								/>
+							</div>
+							<div v-else>
+								--
+							</div>
 						</n-descriptions-item>
 						<n-descriptions-item label="欢迎语">
-							<div v-if="selectedYuniAccount.welcomeMessage" v-for="(item, index) in JSON.parse(selectedYuniAccount.welcomeMessage)" :key="index">
+							<div v-if="selectedAccount.welcomeMessage" v-for="(item, index) in JSON.parse(selectedAccount.welcomeMessage)" :key="index">
 								<n-tag size="small" type="info" v-if="item.type === 0">
 									{{ item.text }}
 								</n-tag>
@@ -78,16 +86,16 @@
 							</div>
 						</n-descriptions-item>
 						<n-descriptions-item label="失效原因">
-							<n-tag size="small" type="error">{{ selectedYuniAccount.causeDisconnection || '无' }}</n-tag>
+							<n-tag size="small" type="error">{{ selectedAccount.causeDisconnection || '无' }}</n-tag>
 						</n-descriptions-item>
 					</n-descriptions>
 
-					<n-data-table :remote="true" style="margin-top: 16px;" :columns="yuniChatColumns" :data="yuniChatList"
-						:pagination="yuniChatPagination" :max-height="480" :scroll-x="800" :loading="tableLoading"
-						:on-update:page="yuniChatTablePageChange" />
+					<n-data-table :remote="true" style="margin-top: 16px;" :columns="chatColumns" :data="uuuTalkChatList"
+						:pagination="uuuTalkChatPagination" :max-height="480" :loading="tableLoading"
+						:on-update:page="chatTablePageChange" />
 				</template>
 				<template #footer>
-					<n-button mr-16 @click="showYuniAccountView = false">取消</n-button>
+					<n-button mr-16 @click="showAccountView = false">取消</n-button>
 				</template>
 			</n-drawer-content>
 		</n-drawer>
@@ -104,37 +112,6 @@
 				:indicator-placement="'inside'"
 				processing/>
 		</n-modal>
-		<n-modal
-			v-model:show="showDefaultView"
-			:mask-closable="false"
-			preset="dialog"
-			title="设置自动回复"
-			positive-text="确认"
-			negative-text="取消"
-			@positive-click="defaultMessageSelectedAction"
-			@negative-click="onNegativeClick">
-			<n-input placeholder="请输入自动回复内容" v-model:value="defaultText" type="textarea"></n-input>
-			<br/><br/>
-			<n-upload
-				accept=".jpeg,.jpg,.png"
-				directory-dnd
-				@finish="uploadFinish"
-				:action="uploadUrl"
-				:headers="uploadHeaders"
-				:max="1">
-				<n-upload-dragger>
-				<div style="margin-bottom: 12px">
-					<TheIcon icon="mdi:cloud-upload" :size="36" />
-				</div>
-				<n-text style="font-size: 16px">
-					点击或者拖动文件到该区域来上传
-				</n-text>
-				<n-p depth="3" style="margin: 8px 0 0 0">
-					只支持PNG、JPG、JPEG三种格式的图片
-				</n-p>
-				</n-upload-dragger>
-			</n-upload>
-		</n-modal>
 
 		<n-drawer v-model:show="showAddAccountByPhoneView" :width="520">
 			<n-drawer-content closable>
@@ -144,7 +121,7 @@
 				<template #default>
 					<n-form ref="createFormRef" :model="createAccount" label-position="top" label-width="auto">
 						<n-form-item label="上号须知">
-							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您Yuni账户比较多建议联系客服购买独立线路。</p>
+							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
 						</n-form-item>
 						<n-form-item label="用户套餐">
 							<br />
@@ -181,7 +158,7 @@
 						<n-form-item label="验证吗" prop="code" required>
 							<n-input-group>
 								<n-input placeholder="请输入验证码" v-model:value="createAccount.code"></n-input>
-								<n-button ghost :loading="sendCodeBtnLoading" @click="sendCodeAction">
+								<n-button ghost :loading="sendCodeBtnLoading" @click="sendPhoneCodeAction">
 									{{ getSmsCodeText }}
 								</n-button>
 							</n-input-group>
@@ -191,6 +168,60 @@
 				<template #footer>
 					<n-button mr-16 @click="showAddAccountByPhoneView = false">取消</n-button>
 					<n-button type="success" :loading="submitLoading" ghost @click="addAccountByPhoneAction">保存</n-button>
+				</template>
+			</n-drawer-content>
+		</n-drawer>
+
+		<n-drawer v-model:show="showAddAccountByMailView" :width="520">
+			<n-drawer-content closable>
+				<template #header>
+					添加UUUTalk账户
+				</template>
+				<template #default>
+					<n-form ref="createFormRef" :model="createAccount" label-position="top" label-width="auto">
+						<n-form-item label="上号须知">
+							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
+						</n-form-item>
+						<n-form-item label="用户套餐">
+							<br />
+							<n-radio-group v-model:value="selectedUserPlanIndex">
+								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
+									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
+								</n-radio>
+							</n-radio-group>
+						</n-form-item>
+						<n-form-item label="用户消息服务器">
+							<br />
+							<n-radio-group v-model:value="selectedTransportServerIndex">
+								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
+									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
+								</n-radio>
+							</n-radio-group>
+						</n-form-item>
+						<n-form-item label="邮箱" prop="mail" required>
+							<n-input placeholder="请输入邮箱" v-model:value="createAccount.mail"></n-input>
+						</n-form-item>
+						<n-form-item label="密码" prop="password" required>
+							<n-input
+								type="password"
+								show-password-on="mousedown"
+								placeholder="请输入密码"
+								v-model:value="createAccount.password"
+								/>
+						</n-form-item>
+						<n-form-item label="验证吗" prop="code" required>
+							<n-input-group>
+								<n-input placeholder="请输入验证码" v-model:value="createAccount.code"></n-input>
+								<n-button ghost :loading="sendCodeBtnLoading" @click="sendMailCodeAction">
+									{{ getSmsCodeText }}
+								</n-button>
+							</n-input-group>
+						</n-form-item>
+					</n-form>
+				</template>
+				<template #footer>
+					<n-button mr-16 @click="showAddAccountByMailView = false">取消</n-button>
+					<n-button type="success" :loading="submitLoading" ghost @click="addAccountByMailAction">保存</n-button>
 				</template>
 			</n-drawer-content>
 		</n-drawer>
@@ -234,6 +265,67 @@
 							</div>
 						</div>
 					</n-form>
+				</template>
+			</n-drawer-content>
+		</n-drawer>
+
+		<n-drawer v-model:show="showDefaultView" :width="520">
+			<n-drawer-content closable>
+				<template #header>
+					自动回复设置
+				</template>
+				<template #default>
+					<n-form ref="createFormRef" label-position="top" label-width="auto">
+						<n-card title="话术列表">
+                            <n-collapse :trigger-areas="triggerAreas" v-for="(item, index) in defaultReplyList" :key="index">
+                                <n-collapse-item :title="defaultReplyList[index].title" :name="index">
+                                    <template #header-extra>
+                                        <n-button mt-2 mb-2 size="small" @click.stop="deleteDefaultReply(index)">删除</n-button>
+                                    </template>
+									<n-radio-group
+										v-model:value="defaultReplyList[index].type"
+										name="left-size"
+										style="margin-bottom: 12px">
+										<n-radio-button :value="0">
+											文本
+										</n-radio-button>
+										<n-radio-button :value="1">
+											图片
+										</n-radio-button>
+									</n-radio-group>
+                                    <n-input placeholder="请输入消息内容" v-if="defaultReplyList[index].type === 0" v-model:value="defaultReplyList[index].text" type="textarea"></n-input>
+                                    <n-upload
+										v-if="defaultReplyList[index].type === 1"
+										accept=".jpeg,.jpg,.png"
+                                        directory-dnd
+                                        @finish="({ file, event}) => uploadDefaultReplyImageFinish({ file, event, index})"
+                                        :action="uploadUrl"
+                                        :headers="uploadHeaders"
+                                        :max="1">
+                                        <n-upload-dragger>
+                                            <div style="margin-bottom: 12px">
+                                                <TheIcon icon="mdi:cloud-upload" :size="36" />
+                                            </div>
+                                            <n-text style="font-size: 16px">
+                                                点击或者拖动文件到该区域来上传
+                                            </n-text>
+                                            <n-p depth="3" style="margin: 8px 0 0 0">
+                                                只支持PNG、JPG、JPEG三种格式的图片
+                                            </n-p>
+                                        </n-upload-dragger>
+                                    </n-upload>
+                                </n-collapse-item>
+                            </n-collapse>
+                        </n-card>
+                        <br />
+                        <n-button type="primary" dashed @click="addDefaultReply">
+                            添加话术
+                        </n-button>
+					</n-form>
+				</template>
+				<template #footer>
+					<n-button mr-16 @click="showDefaultView = false">取消</n-button>
+					<n-button :loading="submitLoading" type="success" ghost @click="defaultMessageSelectedAction">保存</n-button>
 				</template>
 			</n-drawer-content>
 		</n-drawer>
@@ -478,7 +570,7 @@ const columns = ref([
 	{
 		title: "操作",
 		key: "action",
-		width: 280,
+		width: 180,
 		fixed: "right",
 		render(row) {
 			let btnList = []
@@ -499,18 +591,8 @@ const columns = ref([
 						{
 							style: 'margin-right: 16px',
 							size: 'small',
-							type: 'info',
-							onClick: () => changeImModeYuniAccount(row)
-						},
-						{ default: () => '切换IM模式' }
-					),
-					h(
-						NButton,
-						{
-							style: 'margin-right: 16px',
-							size: 'small',
 							type: 'warning',
-							onClick: () => destroyYuniAccount(row)
+							onClick: () => destroyAccount(row)
 						},
 						{ default: () => '下线' }
 					)
@@ -522,7 +604,7 @@ const columns = ref([
 					{
 						size: 'small',
 						type: 'error',
-						onClick: () => deleteYuniAccount(row)
+						onClick: () => deleteAccount(row)
 					},
 					{ default: () => '删除' }
 				),
@@ -532,7 +614,7 @@ const columns = ref([
 	}
 ]);
 
-const yuniChatColumns = ref([
+const chatColumns = ref([
 	{
 		title: "昵称",
 		key: "title",
@@ -564,43 +646,6 @@ const yuniChatColumns = ref([
 			}
 		}
 	},
-	{
-		title: "群号",
-		key: "groupNo",
-		width: 60,
-	},
-	{
-		title: "群成员数量",
-		key: "groupMemCount",
-		width: 60,
-		render(row) {
-			return h(
-				NTag,
-				{
-					size: 'small',
-					type: 'success'
-				},
-				{ default: () => row.groupMemCount }
-			)
-		}
-	},
-	{
-		title: "操作",
-		key: "action",
-		width: 50,
-		fixed: "right",
-		render(row) {
-			return h(
-				NButton,
-				{
-					size: 'small',
-					type: 'error',
-					onClick: () => leaveChat(row)
-				},
-				{ default: () => '删除' }
-			)
-		}
-	}
 ]);
 
 const addUUUTalkAccountBtnOptions = [
@@ -630,30 +675,28 @@ const createAccount = ref({
 const getSmsCodeText = ref("点击发送验证码");
 const timeCount = ref(20);
 
-const yuniAccountList = ref([]);
-const yuniChatList = ref([]);
+const accountList = ref([]);
+const uuuTalkChatList = ref([]);
 const transportServerList = ref([]);
 const userPlanList = ref([]);
 const selectedUserPlanIndex = ref(0);
 const selectedTransportServerIndex = ref(0);
-const showYuniAccountView = ref(false);
-const yuniAccountPagination = reactive({ pageSize: 1000, page: 1, itemCount: 0, param: undefined });
-const yuniChatPagination = reactive({ pageSize: 20, page: 1, itemCount: 0, param: undefined });
+const showAccountView = ref(false);
+const accountPagination = reactive({ pageSize: 1000, page: 1, itemCount: 0, param: undefined });
+const uuuTalkChatPagination = reactive({ pageSize: 20, page: 1, itemCount: 0, param: undefined });
 const submitLoading = ref(false);
+const sendCodeBtnLoading = ref(false);
 const tableLoading = ref(false);
-const selectedYuniAccount = ref({});
-const selectedYuniAccountList = ref([]);
+const selectedAccount = ref({});
+const selectedAccountList = ref([]);
 const showProgress = ref(false);
 const progress = ref(0)
 const uploadUrl = ref(`${import.meta.env.VITE_BASE_API}/v1/upload`)
 const uploadHeaders = ref({})
+const defaultReplyList = ref([]);
 const welcomeMessageList = ref([]);
 const showWelcomeMessageView = ref(false)
 const showDefaultView = ref(false)
-const defaultText = ref('')
-const defaultImage = ref('')
-const showStickerView = ref(false)
-const stickerImage = ref('')
 const showAddAccountByPhoneView = ref(false)
 const showAddAccountByMailView = ref(false)
 const showQRCodeView = ref(false)
@@ -762,30 +805,92 @@ const addAccountByPhoneAction = async () => {
 		$message.error('请输入验证码')
 		return
 	}
-
+	submitLoading.value = true
+	try {
+		const resp = await api.login({
+			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
+			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			uuid: createAccount.value.uuid,
+			region: createAccount.value.region, 
+			phone: createAccount.value.phone,
+			username: createAccount.value.region + createAccount.value.phone,
+			code: createAccount.value.code,
+			password: createAccount.value.password,
+			source: 1,
+			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
+			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
+			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+		})
+		createAccount.value.uuid = uuidv4()
+		$message.success('操作成功')
+	} catch (error) {
+		console.error(error)
+	}
+	submitLoading.value = false
 }
 
-const sendCodeAction = async () => {
-	if (createAccount.value.phone === '') {
-		$message.error('请输入手机号')
+const addAccountByMailAction = async () => {
+	if (createAccount.value.mail === '') {
+		$message.error('请输入邮箱')
 		return
 	}
 	if (createAccount.value.password === '') {
 		$message.error('请输入密码')
 		return
 	}
-	if (submitLoading.value || getSmsCodeText.value !== '点击发送验证码') {
-		return;
+	if (createAccount.value.code === '') {
+		$message.error('请输入验证码')
+		return
 	}
 	submitLoading.value = true
 	try {
-		const resp = await api.sendVerifiedSms({
+		const resp = await api.login({
+			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
+			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
 			uuid: createAccount.value.uuid,
-			phone: createAccount.value.phone,
-			password: createAccount.value.password
+			mail: createAccount.value.mail,
+			username: createAccount.value.mail,
+			code: createAccount.value.code,
+			password: createAccount.value.password,
+			source: 2,
+			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
+			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
+			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+		})
+		createAccount.value.uuid = uuidv4()
+		$message.success('操作成功')
+	} catch (error) {
+		console.error(error)
+	}
+	submitLoading.value = false
+}
+
+const sendMailCodeAction = async () => {
+	if (createAccount.value.mail === '') {
+		$message.error('请输入邮箱')
+		return
+	}
+	if (createAccount.value.password === '') {
+		$message.error('请输入密码')
+		return
+	}
+	if (sendCodeBtnLoading.value || getSmsCodeText.value !== '点击发送验证码') {
+		return;
+	}
+	sendCodeBtnLoading.value = true
+	try {
+		const resp = await api.sendMailVerifiedSms({
+			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
+			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			uuid: createAccount.value.uuid,
+			mail: createAccount.value.mail,
+			password: createAccount.value.password,
+			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
+			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
+			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
 		})
 		$message.success('发送成功')
-		submitLoading.value = false
+		sendCodeBtnLoading.value = false
 		let time = 0;
 		interval = setInterval(() => {
 			time++;
@@ -800,95 +905,93 @@ const sendCodeAction = async () => {
 	} catch (error) {
 		console.error(error)
 	}
-	submitLoading.value = false
+	sendCodeBtnLoading.value = false
 }
 
-const syncGroupSelectedAction = async () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+const sendPhoneCodeAction = async () => {
+	if (createAccount.value.phone === '') {
+		$message.error('请输入手机号')
 		return
 	}
-	progress.value = 0
-	showProgress.value = true
-	let i = 0
-	for (let item of selectedYuniAccountList.value) {
-		await syncGroupAction(item, false)
-		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
-	}
-	showProgress.value = false
-	selectedYuniAccountList.value = []
-	loadAccountAction();
-}
-
-const syncFriendSelectedAction = async () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+	if (createAccount.value.password === '') {
+		$message.error('请输入密码')
 		return
 	}
-	progress.value = 0
-	showProgress.value = true
-	let i = 0
-	for (let item of selectedYuniAccountList.value) {
-		await syncFriendAction(item, false)
-		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+	if (sendCodeBtnLoading.value || getSmsCodeText.value !== '点击发送验证码') {
+		return;
 	}
-	showProgress.value = false
-	selectedYuniAccountList.value = []
-	loadAccountAction();
+	sendCodeBtnLoading.value = true
+	try {
+		const resp = await api.sendPhoneVerifiedSms({
+			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
+			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			uuid: createAccount.value.uuid,
+			phone: createAccount.value.phone,
+			region: createAccount.value.region,
+			password: createAccount.value.password,
+			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
+			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
+			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+		})
+		$message.success('发送成功')
+		sendCodeBtnLoading.value = false
+		let time = 0;
+		interval = setInterval(() => {
+			time++;
+			if (time >= timeCount.value) {
+				clearInterval(interval);
+				interval = null;
+				getSmsCodeText.value = '点击发送验证码'
+				return;
+			}
+			getSmsCodeText.value = timeCount.value - time + 's';
+		}, 1000)
+	} catch (error) {
+		console.error(error)
+	}
+	sendCodeBtnLoading.value = false
 }
 
 const syncSelectedAction = async () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+	if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		await syncAction(item, false)
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
 	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadAccountAction();
 }
 
 const showDefaultViewAction = () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+	if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
-	defaultText.value = ''
-	defaultImage.value = ''
+	defaultReplyList.value = []
 	showDefaultView.value = true
 }
 
-const showSetStickerViewAction = () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
-		return
-	}
-	stickerImage.value = ''
-	showStickerView.value = true
-}
-
 const showWelcomeMessageViewAction = () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+	if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	welcomeMessageList.value = []
 	showWelcomeMessageView.value = true
 }
 
-const uploadFinish = ({ file, event}) => {
+const uploadDefaultReplyImageFinish = ({ file, event, index}) => {
 	if (event && event.target && event.target.response) {
 		let resp = JSON.parse(event.target.response)
-		defaultImage.value = resp.data
+        defaultReplayList.value[index].image = resp.data
 	}
     return file;
 };
@@ -901,62 +1004,39 @@ const uploadWelcomeMessageImageFinish = ({ file, event, index}) => {
     return file;
 };
 
-const uploadSetStickerImageFinish = ({ file, event, index}) => {
-	if (event && event.target && event.target.response) {
-		let resp = JSON.parse(event.target.response)
-        stickerImage.value = resp.data
-	}
-    return file;
-};
-
 const defaultMessageSelectedAction = async () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+	if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
+	if (!defaultReplyList || 0 === defaultReplyList.value.length) {
+		$message.error('请先添加话术')
+		return
+	}
+	for (let item of defaultReplyList.value) {
+        if ('' === item.text && '' === item.image) {
+            $message.error('请输入话术内容或上传图片')
+            return
+        }
+    }
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		try {
 			await api.defaultMessage({
-				yuniAccountId: item.id,
-				text: defaultText.value,
-				image: defaultImage.value
+				uuuTalkAccountId: item.id,
+				messageList: defaultReplyList.value
 			})
 		} catch (error) {
 			console.error(error)
 		}
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
+	showDefaultView.value = false
 	showProgress.value = false
-	selectedYuniAccountList.value = []
-	loadAccountAction();
-}
-
-const setStickerSelectedAction = async () => {
-	if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
-		return
-	}
-	progress.value = 0
-	showProgress.value = true
-	let i = 0
-	for (let item of selectedYuniAccountList.value) {
-		try {
-			await api.setSticker({
-				yuniAccountId: item.id,
-				imageUrl: stickerImage.value
-			})
-		} catch (error) {
-			console.error(error)
-		}
-		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
-	}
-	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadAccountAction();
 }
 
@@ -964,37 +1044,7 @@ const loadAccountAction = async () => {
 	tableLoading.value = true
 	let result = await api.list()
 	tableLoading.value = false
-	yuniAccountList.value = result.data ?? []
-}
-
-const syncGroupAction = async (row, refresh = true) => {
-	try {
-		tableLoading.value = true
-		let res = await api.syncGroup(row.id)
-		tableLoading.value = false
-		$message.success('操作成功')
-	} catch (error) {
-		tableLoading.value = false
-		console.error(error)
-	}
-	if (refresh) {
-		loadAccountAction();
-	}
-}
-
-const syncFriendAction = async (row, refresh = true) => {
-	try {
-		tableLoading.value = true
-		let res = await api.syncFriend(row.id)
-		tableLoading.value = false
-		$message.success('操作成功')
-	} catch (error) {
-		tableLoading.value = false
-		console.error(error)
-	}
-	if (refresh) {
-		loadAccountAction();
-	}
+	accountList.value = result.data ?? []
 }
 
 const syncAction = async (row, refresh = true) => {
@@ -1029,68 +1079,47 @@ const approvalFriendAction = async (row, refresh = true) => {
 
 const detailsAction = async (row) => {
 	try {
-		selectedYuniAccount.value = row
-		loadTgChatAction(row.id)
+		selectedAccount.value = row
+		loadChatAction(row.id)
 	} catch (error) {
 		console.error(error)
 	}
 }
 
-const loadTgChatAction = async (yuniAccountId) => {
+const loadChatAction = async (uuuTalkAccountId) => {
 	try {
 		tableLoading.value = true
-		let res = await api.yuniChatList({
-			yuniAccountId: yuniAccountId || yuniChatPagination.param,
-			pageIndex: yuniChatPagination.page,
-			pageSize: yuniChatPagination.pageSize,
+		let res = await api.uuuTalkChatList({
+			uuuTalkAccountId: uuuTalkAccountId || uuuTalkChatPagination.param,
+			pageIndex: uuuTalkChatPagination.page,
+			pageSize: uuuTalkChatPagination.pageSize,
 		})
 		tableLoading.value = false
-		yuniChatList.value = res.data
-		yuniChatPagination.pageSize = 20
-		yuniChatPagination.page = res.pageIndex
-		yuniChatPagination.itemCount = res.totalRecords
-		yuniChatPagination.param = yuniAccountId || yuniChatPagination.param
-		showYuniAccountView.value = true
+		uuuTalkChatList.value = res.data
+		uuuTalkChatPagination.pageSize = 20
+		uuuTalkChatPagination.page = res.pageIndex
+		uuuTalkChatPagination.itemCount = res.totalRecords
+		uuuTalkChatPagination.param = uuuTalkAccountId || uuuTalkChatPagination.param
+		showAccountView.value = true
 	} catch (error) {
 		tableLoading.value = false
 		console.error(error)
 	}
 }
 
-const yuniChatTablePageChange = async (page) => {
-	yuniChatPagination.page = page
-	loadTgChatAction(undefined)
+const chatTablePageChange = async (page) => {
+	uuuTalkChatPagination.page = page
+	loadChatAction(undefined)
 }
 
-const changeImModeYuniAccount = async (row, refresh = true) => {
-	try {
-		tableLoading.value = true
-		let res = await api.changeImMode({
-			yuniAccountId: row.id,
-			imMode: row.imMode === 'web' ? 'app' : 'web'
-		})
-		tableLoading.value = false
-		yuniChatPagination.pageSize = 20
-		yuniChatPagination.page = 1
-		yuniChatPagination.itemCount = 0
-		$message.success('操作成功')
-	} catch (error) {
-		tableLoading.value = false
-		console.error(error)
-	}
-	if (refresh) {
-		loadAccountAction();
-	}
-}
-
-const destroyYuniAccount = async (row, refresh = true) => {
+const destroyAccount = async (row, refresh = true) => {
 	try {
 		tableLoading.value = true
 		let res = await api.destroy(row.id)
 		tableLoading.value = false
-		yuniChatPagination.pageSize = 20
-		yuniChatPagination.page = 1
-		yuniChatPagination.itemCount = 0
+		uuuTalkChatPagination.pageSize = 20
+		uuuTalkChatPagination.page = 1
+		uuuTalkChatPagination.itemCount = 0
 		$message.success('操作成功')
 	} catch (error) {
 		tableLoading.value = false
@@ -1101,14 +1130,14 @@ const destroyYuniAccount = async (row, refresh = true) => {
 	}
 }
 
-const deleteYuniAccount = async (row, refresh = true) => {
+const deleteAccount = async (row, refresh = true) => {
 	try {
 		tableLoading.value = true
 		let res = await api.delete(row.id)
 		tableLoading.value = false
-		yuniChatPagination.pageSize = 20
-		yuniChatPagination.page = 1
-		yuniChatPagination.itemCount = 0
+		uuuTalkChatPagination.pageSize = 20
+		uuuTalkChatPagination.page = 1
+		uuuTalkChatPagination.itemCount = 0
 		$message.success('操作成功')
 	} catch (error) {
 		tableLoading.value = false
@@ -1120,24 +1149,13 @@ const deleteYuniAccount = async (row, refresh = true) => {
 	}
 }
 
-const leaveChat = async (row) => {
-	if (row.type != 1) {
-		$message.success('只支持删除用户')
-		return
-	}
-	try {
-		tableLoading.value = true
-		let res = await api.leaveChat({
-			yuniAccountId: row.yuniAccountId,
-			friendUid: row.targetId,
-		})
-		tableLoading.value = false
-		$message.success('操作成功')
-		loadTgChatAction(row.yuniAccountId)
-	} catch (error) {
-		tableLoading.value = false
-		console.error(error)
-	}
+const addDefaultReply = () => {
+    defaultReplyList.value.push({
+        title: '话术',
+        type: 0,
+        text: '',
+        image: '',
+    })
 }
 
 const addWelcomeMessage = () => {
@@ -1150,8 +1168,8 @@ const addWelcomeMessage = () => {
 }
 
 const saveWelcomeMessageAction = async () => {
-    if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+    if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	if (!welcomeMessageList || 0 === welcomeMessageList.value.length) {
@@ -1167,22 +1185,26 @@ const saveWelcomeMessageAction = async () => {
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		try {
 			await api.welcomeMessage({
-				yuniAccountId: item.id,
+				uuuTalkAccountId: item.id,
 				messageList: welcomeMessageList.value,
 			})
 		} catch (error) {
 			console.error(error)
 		}
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
 	showWelcomeMessageView.value = false
 	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadAccountAction();
+}
+
+const deleteDefaultReply = (index) => {
+    defaultReplyList.value.splice(index, 1)
 }
 
 const deleteWelcomeMessage = (index) => {
@@ -1190,69 +1212,69 @@ const deleteWelcomeMessage = (index) => {
 }
 
 const deleteSelectedAction = async () => {
-    if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+    if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		try {
 			await api.delete(item.id)
 		} catch (error) {
 			console.error(error)
 		}
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
 	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadUserPlanAction()
 	loadAccountAction();
 }
 
-const cleanStickerAction = async () => {
-    if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+const cleanDefaultMessageAction = async () => {
+    if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		try {
-			await api.cleanSticker(item.id)
+			await api.cleanDefaultMessage(item.id)
 		} catch (error) {
 			console.error(error)
 		}
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
 	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadAccountAction();
 }
 
 const cleanWelcomeMessageAction = async () => {
-    if (!selectedYuniAccountList || 0 === selectedYuniAccountList.value.length) {
-		$message.error('请先选择Yuni账户')
+    if (!selectedAccountList || 0 === selectedAccountList.value.length) {
+		$message.error('请先选择UUUTalk账户')
 		return
 	}
 	progress.value = 0
 	showProgress.value = true
 	let i = 0
-	for (let item of selectedYuniAccountList.value) {
+	for (let item of selectedAccountList.value) {
 		try {
 			await api.cleanWelcomeMessage(item.id)
 		} catch (error) {
 			console.error(error)
 		}
 		i++
-		progress.value = parseInt((i / selectedYuniAccountList.value.length) * 100)
+		progress.value = parseInt((i / selectedAccountList.value.length) * 100)
 	}
 	showProgress.value = false
-	selectedYuniAccountList.value = []
+	selectedAccountList.value = []
 	loadAccountAction();
 }
 
@@ -1299,6 +1321,7 @@ const startCheckQRCodeStatus = () => {
 			})
 			if (res.code === 200 && res.data !== '') {
 				if (res.data.status === 'authed') {
+					createAccount.value.uuid = uuidv4()
 					clearInterval(checkQRCodeTimer)
 					checkQRCodeTimer = null
 					showQRCodeView.value = false
