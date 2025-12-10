@@ -124,20 +124,10 @@
 							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
 						</n-form-item>
 						<n-form-item label="用户套餐">
-							<br />
-							<n-radio-group v-model:value="selectedUserPlanIndex">
-								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择套餐" v-model:value="selectedUserPlanId" :options="userPlanList" />
 						</n-form-item>
 						<n-form-item label="用户消息服务器">
-							<br />
-							<n-radio-group v-model:value="selectedTransportServerIndex">
-								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择服务器" v-model:value="selectedTransportServerId" :options="transportServerList" />
 						</n-form-item>
 						<n-form-item label="手机号" prop="phone" required>
 							<n-input-group>
@@ -183,20 +173,10 @@
 							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
 						</n-form-item>
 						<n-form-item label="用户套餐">
-							<br />
-							<n-radio-group v-model:value="selectedUserPlanIndex">
-								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择套餐" v-model:value="selectedUserPlanId" :options="userPlanList" />
 						</n-form-item>
 						<n-form-item label="用户消息服务器">
-							<br />
-							<n-radio-group v-model:value="selectedTransportServerIndex">
-								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择服务器" v-model:value="selectedTransportServerId" :options="transportServerList" />
 						</n-form-item>
 						<n-form-item label="邮箱" prop="mail" required>
 							<n-input placeholder="请输入邮箱" v-model:value="createAccount.mail"></n-input>
@@ -237,20 +217,10 @@
 							<p style="font-size: 14px; color: red">默认情况以下消息服务器均为公共消息服务器，用的人非常多，可能存在禁言风控等风险，如果您UUUTalk账户比较多建议联系客服购买独立线路。</p>
 						</n-form-item>
 						<n-form-item label="用户套餐">
-							<br />
-							<n-radio-group v-model:value="selectedUserPlanIndex">
-								<n-radio mt-8 v-for="(item, index) of userPlanList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.title }}:({{ item.uuuTalkAccountCount }}/{{ item.uuuTalkAccountTotal }})
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择套餐" v-model:value="selectedUserPlanId" :options="userPlanList" />
 						</n-form-item>
 						<n-form-item label="用户消息服务器">
-							<br />
-							<n-radio-group v-model:value="selectedTransportServerIndex">
-								<n-radio mt-8 v-for="(item, index) of transportServerList" :key="index" :value="index" :disabled="!item.enable">
-									{{ item.tag }}:当前账户数量 {{ item.uuuTalkAccountCount }}
-								</n-radio>
-							</n-radio-group>
+							<n-select placeholder="请选择服务器" v-model:value="selectedTransportServerId" :options="transportServerList" />
 						</n-form-item>
 						<n-button ghost @click="getQRCode">获取二维码</n-button>
 						<div class="qrcode-container" style="text-align: center;">
@@ -679,8 +649,8 @@ const accountList = ref([]);
 const uuuTalkChatList = ref([]);
 const transportServerList = ref([]);
 const userPlanList = ref([]);
-const selectedUserPlanIndex = ref(0);
-const selectedTransportServerIndex = ref(0);
+const selectedUserPlanId = ref(null);
+const selectedTransportServerId = ref(null);
 const showAccountView = ref(false);
 const accountPagination = reactive({ pageSize: 1000, page: 1, itemCount: 0, param: undefined });
 const uuuTalkChatPagination = reactive({ pageSize: 20, page: 1, itemCount: 0, param: undefined });
@@ -762,14 +732,35 @@ const addUUUTalkAccountBtnHandleSelect = (key) => {
 	}
 }
 
+const getUserPlanById = (val) => {
+	for (let item of userPlanList.value) {
+		if (item.id == val) {
+			return item;
+		}
+	}
+	return null
+}
+
+const getTransportServerById = (val) => {
+	for (let item of transportServerList.value) {
+		if (item.id == val) {
+			return item;
+		}
+	}
+	return null
+}
+
 const loadTransportServerAction = async () => {
 	let result = await api.transportServerList()
 	transportServerList.value = result.data
 	let uuuTalkAccountCount = 999999;
 	for (let i = 0; i < transportServerList.value.length; i++) {
+		transportServerList.value[i].label = transportServerList.value[i].tag + '-用户数量:' + transportServerList.value[i].uuuTalkAccountCount
+		transportServerList.value[i].value = transportServerList.value[i].id
+		transportServerList.value[i].disabled = !transportServerList.value[i].enable
 		if (transportServerList.value[i].enable) {
 			if (transportServerList.value[i].uuuTalkAccountCount < uuuTalkAccountCount) {
-				selectedTransportServerIndex.value = i;
+				selectedTransportServerId.value = transportServerList.value[i].id;
 				uuuTalkAccountCount = transportServerList.value[i].uuuTalkAccountCount;
 			}
 		}
@@ -783,12 +774,16 @@ const loadUserPlanAction = async () => {
 	for (let i = 0; i < userPlanList.value.length; i++) {
 		const targetDate = new Date(userPlanList.value[i].expire.replace(" ", "T"));
 		if (targetDate > currentDate && userPlanList.value[i].uuuTalkAccountCount < userPlanList.value[i].uuuTalkAccountTotal) {
-			selectedUserPlanIndex.value = i
+			selectedUserPlanId.value = userPlanList.value[i].id
 			userPlanList.value[i].enable = true
 		} else {
 			userPlanList.value[i].enable = false
 		}
-
+		userPlanList.value[i].label = userPlanList.value[i].title + `-(${userPlanList.value[i].uuuTalkAccountCount}/${userPlanList.value[i].uuuTalkAccountTotal})`
+		userPlanList.value[i].value = userPlanList.value[i].id
+		if (selectedUserPlanId.value === null) {
+			selectedUserPlanId.value = userPlanList.value[i].id
+		}
 	}
 }
 
@@ -808,8 +803,8 @@ const addAccountByPhoneAction = async () => {
 	submitLoading.value = true
 	try {
 		const resp = await api.login({
-			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+			userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 			uuid: createAccount.value.uuid,
 			region: createAccount.value.region, 
 			phone: createAccount.value.phone,
@@ -817,9 +812,9 @@ const addAccountByPhoneAction = async () => {
 			code: createAccount.value.code,
 			password: createAccount.value.password,
 			source: 1,
-			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+			serverHost: getTransportServerById(selectedTransportServerId.value).host,
+			serverPort: getTransportServerById(selectedTransportServerId.value).port,
+			serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 		})
 		createAccount.value.uuid = uuidv4()
 		$message.success('操作成功')
@@ -845,17 +840,17 @@ const addAccountByMailAction = async () => {
 	submitLoading.value = true
 	try {
 		const resp = await api.login({
-			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+			userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 			uuid: createAccount.value.uuid,
 			mail: createAccount.value.mail,
 			username: createAccount.value.mail,
 			code: createAccount.value.code,
 			password: createAccount.value.password,
 			source: 2,
-			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+			serverHost: getTransportServerById(selectedTransportServerId.value).host,
+			serverPort: getTransportServerById(selectedTransportServerId.value).port,
+			serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 		})
 		createAccount.value.uuid = uuidv4()
 		$message.success('操作成功')
@@ -880,14 +875,14 @@ const sendMailCodeAction = async () => {
 	sendCodeBtnLoading.value = true
 	try {
 		const resp = await api.sendMailVerifiedSms({
-			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+			userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 			uuid: createAccount.value.uuid,
 			mail: createAccount.value.mail,
 			password: createAccount.value.password,
-			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+			serverHost: getTransportServerById(selectedTransportServerId.value).host,
+			serverPort: getTransportServerById(selectedTransportServerId.value).port,
+			serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 		})
 		$message.success('发送成功')
 		sendCodeBtnLoading.value = false
@@ -923,15 +918,15 @@ const sendPhoneCodeAction = async () => {
 	sendCodeBtnLoading.value = true
 	try {
 		const resp = await api.sendPhoneVerifiedSms({
-			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+			userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 			uuid: createAccount.value.uuid,
 			phone: createAccount.value.phone,
 			region: createAccount.value.region,
 			password: createAccount.value.password,
-			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+			serverHost: getTransportServerById(selectedTransportServerId.value).host,
+			serverPort: getTransportServerById(selectedTransportServerId.value).port,
+			serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 		})
 		$message.success('发送成功')
 		sendCodeBtnLoading.value = false
@@ -1282,12 +1277,12 @@ const getQRCode = async () => {
 	currentUuid.value = generateUuid()
 	try {
 		const res = await api.getLoginQRCode({
-			userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-			userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+			userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+			userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 			uuid: currentUuid.value,
-			serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-			serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-			serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+			serverHost: getTransportServerById(selectedTransportServerId.value).host,
+			serverPort: getTransportServerById(selectedTransportServerId.value).port,
+			serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 		})
 		if (res.code === 200) {
 			qrcodeUrl.value = res.data.qrcode
@@ -1311,13 +1306,13 @@ const startCheckQRCodeStatus = () => {
 	const check = async () => {
 		try {
 			const res = await api.checkLoginQRCode({
-				userPlanId: userPlanList.value[selectedUserPlanIndex.value].id,
-				userPlanTitle: userPlanList.value[selectedUserPlanIndex.value].title,
+				userPlanId: getUserPlanById(selectedUserPlanId.value).id,
+				userPlanTitle: getUserPlanById(selectedUserPlanId.value).title,
 				uuid: currentUuid.value,
 				qrCodeUUID: currentQRCodeUuid.value,
-				serverHost: transportServerList.value[selectedTransportServerIndex.value].host,
-				serverPort: transportServerList.value[selectedTransportServerIndex.value].port,
-				serverTag: transportServerList.value[selectedTransportServerIndex.value].tag,
+				serverHost: getTransportServerById(selectedTransportServerId.value).host,
+				serverPort: getTransportServerById(selectedTransportServerId.value).port,
+				serverTag: getTransportServerById(selectedTransportServerId.value).tag,
 			})
 			if (res.code === 200 && res.data !== '') {
 				if (res.data.status === 'authed') {

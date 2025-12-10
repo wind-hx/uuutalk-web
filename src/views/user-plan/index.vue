@@ -65,7 +65,7 @@ const columns = ref([
 	},
 	{
 		title: 'UUUTalk账户数量',
-		key: "groupMemCount",
+		key: "count",
 		width: 100,
 		render(row) {
 			return h(
@@ -74,7 +74,7 @@ const columns = ref([
 					size: 'small',
 					type: 'success'
 				},
-				{ default: () => row.groupMemCount }
+				{ default: () => `${row.uuuTalkAccountCount}/${row.uuuTalkAccountTotal}` }
 			)
 		}
 	},
@@ -95,7 +95,7 @@ const columns = ref([
 					{
 						size: 'small',
 						type: 'error',
-						onClick: () => deleteAccount(row)
+						onClick: () => renewalAccount(row)
 					},
 					{ default: () => '续费' }
 				)
@@ -119,15 +119,12 @@ onMounted(
 )
 
 const loadUserPlanListAction = async () => {
-	let result = await api.yuniAccountList()
-	let temp = []
-	for (let item of result.data) {
-		item.label = item.nickname
-		item.value = item.id
-		item.disabled = null != item.taskId && 0 != item.taskId
-		temp.push(item)
-	}
-	yuniAccountList.value = temp
+	let result = await api.list()
+	userPlanList.value = result.data ?? []
+}
+
+const renewalAccount = async () => {
+	
 }
 
 </script>
