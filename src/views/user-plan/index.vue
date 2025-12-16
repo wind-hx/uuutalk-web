@@ -51,7 +51,7 @@
 import { h, defineComponent, ref, onMounted, reactive } from "vue";
 import { NTag, NButton } from 'naive-ui'
 import api from './api'
-import YuniAccountApi from '../uuutalk-account/api'
+import UUUTalkAccountApi from '../uuutalk-account/api'
 
 const columns = ref([
 	{

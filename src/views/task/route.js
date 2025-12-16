@@ -21,15 +21,5 @@ export default {
                 icon: 'mdi:calendar-task-outline',
             },
         },
-        {
-            name: '邀请任务',
-            path: 'invite-task',
-            component: () =>
-                import ('./invite-task.vue'),
-            meta: {
-                title: '邀请任务',
-                icon: 'mdi:calendar-task-outline',
-            },
-        },
     ],
 }

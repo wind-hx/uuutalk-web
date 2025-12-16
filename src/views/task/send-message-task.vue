@@ -33,13 +33,13 @@
 				</template>
 				<template #default>
 					<n-form ref="createFormRef" :model="task" label-position="top" label-width="auto">
-						<n-form-item label="Yuni账户" prop="yuniAccountId">
+						<n-form-item label="UUUTalk账户" prop="uuuTalkAccountId">
 							<n-select 
 								multiple 
-								placeholder="请选择Yuni账户" 
-								v-model:value="selectedYuniAccountId" 
-								:on-blur="changeYuniAccount"
-								:options="yuniAccountList" />
+								placeholder="请选择UUUTalk账户" 
+								v-model:value="selectedUUUTalkAccountId" 
+								:on-blur="changeUUUTalkAccount"
+								:options="accountList" />
 							<div style="padding-left: 8px;"></div>
 							<n-button @click="checkAll">全选</n-button>
 						</n-form-item>
@@ -132,7 +132,7 @@
 							</template>
 						</n-form-item>
 						<n-form-item label="消息总数" prop="total" required>
-							<n-input-number style="width: 100%;" :min="1" :max="1000000" placeholder="请输入消息总数" v-model:value="task.total" clearable />
+							<n-input-number style="width: 100%;" :min="1" :max="10000000" placeholder="请输入消息总数" v-model:value="task.total" clearable />
 						</n-form-item>
 						<n-form-item label="辅助选项">
 							<n-checkbox v-model:checked="task.hasTail">
@@ -155,14 +155,14 @@
 								</n-radio-button>
 							</n-radio-group>
 						</n-form-item>
-						<n-button type="success" ghost @click="selectChatAction" v-if="selectedYuniAccountId.length === 1">
+						<n-button type="success" ghost @click="selectChatAction" v-if="selectedUUUTalkAccountId.length === 1">
 							选择目标
 						</n-button>
 						<br/><br/>
 						<n-data-table
-							v-if="selectedYuniAccountId.length === 1"
+							v-if="selectedUUUTalkAccountId.length === 1"
 							:columns="selectedTgChatColumns"
-							:data="selectedYuniChatList"/>
+							:data="selectedUUUTalkChatList"/>
 					</n-form>
 				</template>
 				<template #footer>
@@ -599,16 +599,16 @@ const sendRecordColumns = ref([
 	},
 ]);
 
-const yuniAccountList = ref([]);
+const accountList = ref([]);
 
 const defaultTask = ref({
 	id: null,
-	yuniAccountId: null,
+	uuuTalkAccountId: null,
 	title: '',
 	text: null,
 	imageUrl: null,
 	repeatMessageUrl: null,
-	total: null,
+	total: 10000000,
 	messageType: 0,
 	timeUnit: 's',
 	waitTimeUnit: 's',
@@ -622,13 +622,13 @@ const task = ref(JSON.parse(JSON.stringify(defaultTask.value)));
 const taskTextArray = ref([
 	'',
 ]);
-const selectedYuniAccountId = ref([]);
+const selectedUUUTalkAccountId = ref([]);
 const taskList = ref([]);
 const taskPagination = reactive({ pageSize: 20, page: 1, itemCount: 0 });
 const sendRecordList = ref([]);
 const sendRecordPagination = reactive({ pageSize: 20, page: 1, itemCount: 0 });
 const tgChatList = ref([]);
-const selectedYuniChatList = ref([]);
+const selectedUUUTalkChatList = ref([]);
 const selectedTaskList = ref([]);
 const showCreateView = ref(false);
 const showTgChatList = ref(false);
@@ -653,20 +653,20 @@ onMounted(
 		uploadHeaders.value = {
 			Authorization: getToken(),
 		}
-		loadYuniAccountAction()
+		loadUUUTalkAccountAction()
 		loadTaskAction()
 	}
 )
 
 const checkAll = async () => {
-	selectedYuniAccountId.value = [];
-	for (let item of yuniAccountList.value) {
-		selectedYuniAccountId.value.push(item.id)
+	selectedUUUTalkAccountId.value = [];
+	for (let item of accountList.value) {
+		selectedUUUTalkAccountId.value.push(item.id)
 	}
 }
 
-const loadYuniAccountAction = async () => {
-	let result = await api.yuniAccountList()
+const loadUUUTalkAccountAction = async () => {
+	let result = await api.accountList()
 	let temp = []
 	for (let item of result.data) {
 		item.label = item.nickname
@@ -674,11 +674,11 @@ const loadYuniAccountAction = async () => {
 		item.disabled = null != item.taskId && 0 != item.taskId
 		temp.push(item)
 	}
-	yuniAccountList.value = temp
+	accountList.value = temp
 }
 
-const getYuniAccountById = (id) => {
-	for (let item of yuniAccountList.value) {
+const getUUUTalkAccountById = (id) => {
+	for (let item of accountList.value) {
 		if (item.id === id) {
 			return item
 		}
@@ -702,8 +702,8 @@ const loadTaskAction = async () => {
 const showCreateViewAction = async () => {
 	showCreateView.value = true;
 	task.value = JSON.parse(JSON.stringify(defaultTask.value))
-	selectedYuniAccountId.value = []
-	selectedYuniChatList.value = []
+	selectedUUUTalkAccountId.value = []
+	selectedUUUTalkChatList.value = []
 	taskTextArray.value = ['']
 }
 
@@ -734,18 +734,18 @@ const sendRecordTablePageChange = async (page) => {
 }
 
 const selectChatAction = async () => {
-	if (0 === selectedYuniAccountId.value.length) {
-		$message.error('请选择Yuni账户')
+	if (0 === selectedUUUTalkAccountId.value.length) {
+		$message.error('请选择UUUTalk账户')
 		return
 	}
 	let result = []
 	if (task.value.type === 0) {
 		result = await api.tgChatQuerySelfGroup({
-			yuniAccountId: selectedYuniAccountId.value[0],
+			uuuTalkAccountId: selectedUUUTalkAccountId.value[0],
 		})
 	} else if (task.value.type === 1) {
 		result = await api.tgChatQuerySelfFriend({
-			yuniAccountId: selectedYuniAccountId.value[0],
+			uuuTalkAccountId: selectedUUUTalkAccountId.value[0],
 		})
 	}
 	tgChatList.value = result.data
@@ -753,7 +753,7 @@ const selectChatAction = async () => {
 }
 
 const handleTgChatCheck = async(rowKeys) => {
-	selectedYuniChatList.value = rowKeys
+	selectedUUUTalkChatList.value = rowKeys
 }
 
 const handleTimeSpacingChange = (number) => {
@@ -816,8 +816,8 @@ const compareTime = (time1, time2) => {
 }
 
 const saveTaskAction = async () => {
-	if (0 === selectedYuniAccountId.value.length) {
-		$message.error('请选择Yuni账户')
+	if (0 === selectedUUUTalkAccountId.value.length) {
+		$message.error('请选择UUUTalk账户')
 		return
 	}
 	if (!task.value.title) {
@@ -862,9 +862,9 @@ const saveTaskAction = async () => {
 		$message.error('请输入有效的消息总数')
 		return
     }
-	if (1 == selectedYuniAccountId.value.length) {
-		task.value.yuniAccountId = selectedYuniAccountId.value[0]
-		if (0 === selectedYuniChatList.value.length) {
+	if (1 == selectedUUUTalkAccountId.value.length) {
+		task.value.uuuTalkAccountId = selectedUUUTalkAccountId.value[0]
+		if (0 === selectedUUUTalkChatList.value.length) {
 			$message.error('请选择目标群组')
 			return
 		}
@@ -872,11 +872,11 @@ const saveTaskAction = async () => {
 		task.value.waitTimeSpacingList = JSON.stringify([parseInt(waitTimeSpacingStart.value), parseInt(waitTimeSpacingEnd.value)])
 		task.value.executionTimeRange = JSON.stringify([taskExecutionTimeStart.value, taskExecutionTimeEnd.value])
 		if (task.value.type === 0) {
-			task.value.targetGroupList = JSON.stringify(selectedYuniChatList.value)
+			task.value.targetGroupList = JSON.stringify(selectedUUUTalkChatList.value)
 			task.value.targetUserList = '[]'
 		} else if (task.value.type === 1) {
 			task.value.targetGroupList = '[]'
-			task.value.targetUserList = JSON.stringify(selectedYuniChatList.value)
+			task.value.targetUserList = JSON.stringify(selectedUUUTalkChatList.value)
 		}
 
 		if (task.value.id) {
@@ -891,19 +891,19 @@ const saveTaskAction = async () => {
 		progress.value = 0
 		showProgress.value = true
 		let i = 0
-		for (let item of selectedYuniAccountId.value) {
+		for (let item of selectedUUUTalkAccountId.value) {
 			let result = []
 			if (task.value.type === 0) {
 				result = await api.tgChatQuerySelfGroup({
-					yuniAccountId: item,
+					uuuTalkAccountId: item,
 				})
 			} else if (task.value.type === 1) {
 				result = await api.tgChatQuerySelfFriend({
-					yuniAccountId: item,
+					uuuTalkAccountId: item,
 				})
 			}
-			task.value.title = '批量创建任务: ' + getYuniAccountById(item).phone
-			task.value.yuniAccountId = item
+			task.value.title = '批量创建任务: ' + getUUUTalkAccountById(item).phone
+			task.value.uuuTalkAccountId = item
 			if (!result.data || 0 === result.data.length) {
 				$message.error('请选择目标群组')
 				continue
@@ -915,7 +915,7 @@ const saveTaskAction = async () => {
 			await api.taskSave(task.value)
 			$message.success('操作成功')
 			i++
-			progress.value = parseInt((i / selectedYuniAccountId.value.length) * 100)
+			progress.value = parseInt((i / selectedUUUTalkAccountId.value.length) * 100)
 		}
 		showProgress.value = false
 		showCreateView.value = false
@@ -972,18 +972,18 @@ const deleteTask = async (row, refresh = true) => {
 const showEditView = async (row) => {
 	try {
 		tableLoading.value = true
-		selectedYuniAccountId.value = []
+		selectedUUUTalkAccountId.value = []
 		let res = await api.taskGet(row.id)
 		tableLoading.value = false
 		task.value = res.data
-		selectedYuniAccountId.value.push(task.value.yuniAccountId)
+		selectedUUUTalkAccountId.value.push(task.value.uuuTalkAccountId)
 		showCreateView.value = true
 		if (task.value.targetGroupList !== '' && task.value.targetGroupList !== '[]') {
-			selectedYuniChatList.value = eval(`(${task.value.targetGroupList})`)
+			selectedUUUTalkChatList.value = eval(`(${task.value.targetGroupList})`)
 			task.value.type = 0
 		}
 		if (task.value.targetUserList !== ''&& task.value.targetUserList !== '[]') {
-			selectedYuniChatList.value = eval(`(${task.value.targetUserList})`)
+			selectedUUUTalkChatList.value = eval(`(${task.value.targetUserList})`)
 			task.value.type = 1
 		}
 		if (task.value.text !== ''&& task.value.text !== '[]') {

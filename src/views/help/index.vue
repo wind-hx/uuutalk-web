@@ -2,11 +2,11 @@
 	<AppPage>
 		<!-- <n-grid x-gap="12" :cols="2">
 			<n-gi>
-				<n-card title="第一步:添加Yuni账户">
+				<n-card title="第一步:添加UUUTalk账户">
 					<template #cover>
 						<iframe width="560" height="315" src="https://www.youtube.com/embed/W0LkLJ-fNJw?si=x0lTMZO3A_sc03gp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 					</template>
-					该视频教程演示了如何添加Yuni账户
+					该视频教程演示了如何添加UUUTalk账户
 				</n-card>
 			</n-gi>
 			<n-gi>

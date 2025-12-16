@@ -12,7 +12,7 @@
             <n-button v-if="!userStore.superiorRemark || userStore.superiorRemark === ''" ghost type="error" @click="openAction">联系客服</n-button>
           </div>
           <div ml-auto flex items-center>
-            <n-statistic label="UUUTalk账户" ml-80 w-100 :value="statistic.yuniAccountCount"></n-statistic>
+            <n-statistic label="UUUTalk账户" ml-80 w-100 :value="statistic.uuuTalkAccountCount"></n-statistic>
             <n-statistic label="群发任务" ml-80 w-100 :value="statistic.taskCount"></n-statistic>
           </div>
         </div>
@@ -49,7 +49,7 @@ const dialog = useDialog()
 const userStore = useUserStore()
 const statistic = ref({
   taskCount: 0,
-  yuniAccountCount: 0,
+  uuuTalkAccountCount: 0,
 })
 const userPlanList = ref([])
 
