@@ -16,19 +16,6 @@ export default {
     cleanDefaultMessage: (id) => request.get(`/v1/uuuTalkAccount/cleanDefaultMessage?id=${id}`),
     welcomeMessage: (data) => request.post('/v1/uuuTalkAccount/welcomeMessage', data),
     cleanWelcomeMessage: (id) => request.get(`/v1/uuuTalkAccount/cleanWelcomeMessage?id=${id}`),
-
-
-    syncGroup: (id) => request.get(`/v1/uuuTalkAccount/syncGroup?id=${id}`),
-    syncFriend: (id) => request.get(`/v1/uuuTalkAccount/syncFriend?id=${id}`),
+    rechargeCreate: (data) => request.post('/v1/recharge/create', data),
     approvalFriendAction: (id) => request.get(`/v1/uuuTalkAccount/approvalFriend?id=${id}`),
-    uuuTalkChatList: (data) => request.post('/v1/uuuTalkChat/query', data),
-    uuuTalkGroupList: (data) => request.post('/v1/uuuTalkChat/querySelfGroup', data),
-    uuuTalkFriendList: (data) => request.post('/v1/uuuTalkChat/querySelfUser', data),
-    groupInvite: (data) => request.post('/v1/uuuTalkAccount/groupInvite', data),
-    delete: (id) => request.get(`/v1/uuuTalkAccount/delete?id=${id}`),
-    destroy: (id) => request.get(`/v1/uuuTalkAccount/destroy?id=${id}`),
-    changeImMode: (data) => request.post('/v1/uuuTalkAccount/changeImMode', data),
-    leaveChat: (data) => request.post('/v1/uuuTalkAccount/unFollowFriend', data),
-    setSticker: (data) => request.post('/v1/uuuTalkAccount/setSticker', data),
-    cleanSticker: (id) => request.get(`/v1/uuuTalkAccount/cleanSticker?id=${id}`),
 }

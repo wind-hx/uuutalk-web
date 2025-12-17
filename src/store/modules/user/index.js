@@ -26,9 +26,6 @@ export const useUserStore = defineStore('user', {
     type() {
       return this.userInfo?.type
     },
-    expire() {
-      return this.userInfo?.expire
-    },
     superiorRemark() {
       return this.userInfo?.superiorRemark
     }
@@ -37,8 +34,8 @@ export const useUserStore = defineStore('user', {
     async getUserInfo() {
       try {
         const res = await api.getUser()
-        const { id, account, avatar, role, type, expire, token, superiorRemark } = res.data
-        this.userInfo = { id, account, avatar, role, type, expire, superiorRemark }
+        const { id, account, avatar, role, type, token, superiorRemark } = res.data
+        this.userInfo = { id, account, avatar, role, type, superiorRemark }
         if (token) {
           setToken(token)
         }
