@@ -10,7 +10,6 @@ export default {
     login: (data) => request.post('/v1/uuuTalkAccount/login', data),
     getLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/getLoginQRCode', data),
     checkLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/checkLoginQRCode', data),
-    loginAuthCode: (data) => request.post('/v1/uuuTalkAccount/loginAuthCode', data),
     sync: (id) => request.get(`/v1/uuuTalkAccount/sync?id=${id}`),
     defaultMessage: (data) => request.post('/v1/uuuTalkAccount/defaultMessage', data),
     cleanDefaultMessage: (id) => request.get(`/v1/uuuTalkAccount/cleanDefaultMessage?id=${id}`),
