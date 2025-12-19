@@ -7,6 +7,7 @@ export default {
     userPlanList: () => request.get('/v1/userPlan/query'),
     sendPhoneVerifiedSms: (data) => request.post('/v1/uuuTalkAccount/sendCodeByPhone', data),
     sendMailVerifiedSms: (data) => request.post('/v1/uuuTalkAccount/sendCodeByMail', data),
+    delete: (id) => request.get(`/v1/uuuTalkAccount/delete?id=${id}`),
     login: (data) => request.post('/v1/uuuTalkAccount/login', data),
     getLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/getLoginQRCode', data),
     checkLoginQRCode: (data) => request.post('/v1/uuuTalkAccount/checkLoginQRCode', data),

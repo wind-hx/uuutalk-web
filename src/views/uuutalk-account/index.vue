@@ -986,7 +986,7 @@ const showWelcomeMessageViewAction = () => {
 const uploadDefaultReplyImageFinish = ({ file, event, index}) => {
 	if (event && event.target && event.target.response) {
 		let resp = JSON.parse(event.target.response)
-        defaultReplayList.value[index].image = resp.data
+        defaultReplyList.value[index].image = resp.data
 	}
     return file;
 };

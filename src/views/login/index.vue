@@ -152,7 +152,7 @@ initLoginInfo()
 load()
 
 function load() {
-  let code = localStorage.getItem('inviteCode')
+  const code = localStorage.getItem('inviteCode')
   if (code) {
     loginInfo.value.inviter = code
     loginInfo.value.hasInviterCode = true

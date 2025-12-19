@@ -30,6 +30,19 @@
       </div>
       <script src="/resource/loading.js"></script>
     </div>
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var inviter = params.get('inviter');
+          if (inviter) {
+            localStorage.setItem('inviteCode', inviter);
+          }
+        } catch (e) {
+          // Ignore URL parse errors.
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

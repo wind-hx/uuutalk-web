@@ -607,7 +607,6 @@ const defaultTask = ref({
 	title: '',
 	text: null,
 	imageUrl: null,
-	repeatMessageUrl: null,
 	total: 10000000,
 	messageType: 0,
 	timeUnit: 's',
