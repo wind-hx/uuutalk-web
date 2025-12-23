@@ -19,4 +19,5 @@ export default {
     rechargeCreate: (data) => request.post('/v1/recharge/create', data),
     approvalFriendAction: (id) => request.get(`/v1/uuuTalkAccount/approvalFriend?id=${id}`),
     destroy: (id) => request.get(`/v1/uuuTalkAccount/destroy?id=${id}`),
+    uuuTalkChatList: (data) => request.post('/v1/uuuTalkChat/query', data),
 }
