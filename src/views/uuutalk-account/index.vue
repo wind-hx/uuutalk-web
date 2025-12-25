@@ -1325,6 +1325,11 @@ const startCheckQRCodeStatus = () => {
 					loadAccountAction()
 					return
 				}
+				if (res.data.status === "expired") {
+					$message.success('二维码过期')
+					getQRCode()
+					return
+				}
 			}
 			// 如果抽屉已关闭，不再继续检查
 			if (!showQRCodeView.value) {
