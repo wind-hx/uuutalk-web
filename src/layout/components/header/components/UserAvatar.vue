@@ -1,7 +1,7 @@
 <template>
   <n-dropdown :options="options" @select="handleSelect">
     <div flex cursor-pointer items-center>
-      <icon-custom-logo text-36 color-primary mr10 h-35 w-35></icon-custom-logo>
+      <img src="@/assets/images/logo.png" alt="UUUTalk" mr10 h-35 w-35 />
       <span>{{ userStore.account }}</span>
     </div>
   </n-dropdown>

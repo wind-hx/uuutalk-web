@@ -41,11 +41,12 @@ export async function addDynamicRoutes() {
   try {
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
-    try {
-      !userStore.userId && (await userStore.getUserInfo())
-    } catch (error) {
-      router.addRoute(basicRoutes)
-      return
+    if (!userStore.userId) {
+      try {
+        await userStore.getUserInfo()
+      } catch (error) {
+        // user info 拉取失败也允许加载无需权限的路由，避免空白页
+      }
     }
     const accessRoutes = permissionStore.generateRoutes(userStore.role)
     accessRoutes.forEach((route) => {

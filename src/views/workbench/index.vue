@@ -3,7 +3,7 @@
     <div flex-1>
       <n-card rounded-10>
         <div flex items-center>
-          <icon-custom-logo text-36 color-primary h-70 w-70></icon-custom-logo>
+          <img src="@/assets/images/logo.png" alt="UUUTalk" h-70 w-70 />
           <div ml-20>
             <p text-16>Hello, {{ userStore.account }}</p>
             <p op-60 style="color: red; font-size: 12px;" v-if="userStore.superiorRemark !== ''">
