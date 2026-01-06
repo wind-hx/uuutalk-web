@@ -8,6 +8,9 @@
 				<n-button type="info" ghost @click="syncSelectedAction">
 					更新账户数据
 				</n-button>
+				<n-dropdown trigger="click" :options="accountBtnActionOptions" @select="tgAccountBtnActionHandleSelect">
+					<n-button type="info" ghost>账户操作</n-button>
+				</n-dropdown>
 				<n-button type="warning" ghost @click="showDefaultViewAction">
 					自动回复
 				</n-button>
@@ -630,6 +633,25 @@ const addUUUTalkAccountBtnOptions = [
 	{
 		label: '扫码登录',
 		key: 'loginByQRCode'
+	},
+]
+
+const accountBtnActionOptions = [
+	{
+		label: '自动回复',
+		key: 'setDefaultMessage'
+	},
+	{
+		label: '删除自动回复',
+		key: 'deleteDefaultMessage'
+	},
+	{
+		label: '欢迎语设置',
+		key: 'setWelcomeMessage'
+	},
+	{
+		label: '删除欢迎语',
+		key: 'deleteWelcomeMessage'
 	},
 ]
 
