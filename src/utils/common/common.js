@@ -14,6 +14,12 @@ export function formatDate(date = undefined, format = 'YYYY-MM-DD') {
   return formatDateTime(date, format)
 }
 
+export function calcCompletionPercent(row) {
+  if (!row || typeof row.total !== 'number' || row.total === 0) return 0;
+  const percent = ((row.successTotal + row.failTotal) / row.total) * 100;
+  return parseFloat(percent.toFixed(2));
+}
+
 /**
  * @desc  函数节流
  * @param {Function} fn

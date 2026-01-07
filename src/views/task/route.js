@@ -5,19 +5,30 @@ export default {
     name: 'Task',
     path: '/task',
     component: Layout,
-    redirect: '/task/send-message-task',
+    redirect: '/task/group-message-task',
     meta: {
         title: '任务管理',
         icon: 'mdi:calendar-task-outline',
         order: 3,
     },
-    children: [{
-            name: '群发任务',
-            path: 'send-message-task',
+    children: [
+        {
+            name: '群组消息任务',
+            path: 'group-message-task',
             component: () =>
-                import ('./send-message-task.vue'),
+                import ('./group-message-task.vue'),
             meta: {
-                title: '群发任务',
+                title: '群组消息任务',
+                icon: 'mdi:calendar-task-outline',
+            },
+        },
+        {
+            name: '用户消息任务',
+            path: 'user-message-task',
+            component: () =>
+                import ('./user-message-task.vue'),
+            meta: {
+                title: '用户消息任务',
                 icon: 'mdi:calendar-task-outline',
             },
         },

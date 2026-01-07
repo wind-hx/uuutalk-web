@@ -8,21 +8,9 @@
 				<n-button type="info" ghost @click="syncSelectedAction">
 					更新账户数据
 				</n-button>
-				<n-dropdown trigger="click" :options="accountBtnActionOptions" @select="tgAccountBtnActionHandleSelect">
+				<n-dropdown trigger="click" :options="accountBtnActionOptions" @select="accountBtnActionHandleSelect">
 					<n-button type="info" ghost>账户操作</n-button>
 				</n-dropdown>
-				<n-button type="warning" ghost @click="showDefaultViewAction">
-					自动回复
-				</n-button>
-				<n-button type="error" ghost @click="cleanDefaultMessageAction">
-					删除自动回复
-				</n-button>
-				<n-button type="warning" ghost @click="showWelcomeMessageViewAction">
-					欢迎语设置
-				</n-button>
-				<n-button type="error" ghost @click="cleanWelcomeMessageAction">
-					删除欢迎语
-				</n-button>
 				<n-button type="error" ghost @click="deleteSelectedAction">
 					删除
 				</n-button>
@@ -619,6 +607,26 @@ const chatColumns = ref([
 			}
 		}
 	},
+	{
+		title: "操作",
+		key: "action",
+		width: 80,
+		fixed: "right",
+		render(row) {
+			if (row.type !== 2) {
+				return '--'
+			}
+			return h(
+				NButton,
+				{
+					size: 'small',
+					type: 'info',
+					onClick: () => exportGroupMemberUid(row)
+				},
+				{ default: () => '导出群成员ID' }
+			)
+		}
+	},
 ]);
 
 const addUUUTalkAccountBtnOptions = [
@@ -654,6 +662,21 @@ const accountBtnActionOptions = [
 		key: 'deleteWelcomeMessage'
 	},
 ]
+
+const accountBtnActionHandleSelect = (key) => {
+	if (key === 'setDefaultMessage') {
+		showDefaultViewAction()
+	}
+	if (key === 'deleteDefaultMessage') {
+		cleanDefaultMessageAction()
+	}
+	if (key === 'setWelcomeMessage') {
+		showWelcomeMessageViewAction()
+	}
+	if (key === 'deleteWelcomeMessage') {
+		cleanWelcomeMessageAction()
+	}
+}
 
 const countryList = ref();
 const countryCodeList = ref(["+86"]);
@@ -1293,6 +1316,28 @@ const cleanWelcomeMessageAction = async () => {
 	showProgress.value = false
 	selectedAccountList.value = []
 	loadAccountAction();
+}
+
+const exportGroupMemberUid = async (row) => {
+	const accountId = selectedAccount.value?.id
+	const toId = row.targetId
+	if (!accountId || !toId) {
+		$message.error('缺少账户或群组信息')
+		return
+	}
+	try {
+		let res = await api.exportGroupMemberUid(accountId, toId)
+		res.data = res.data ?? []
+		let text = res.data.join(',')
+		const element = document.createElement('a')
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+		element.setAttribute('download', row.title + '_groupMemberUid')
+		element.style.display = 'none'
+		element.click()
+		$message.success('操作成功')
+	} catch (error) {
+		console.error(error)
+	}
 }
 
 const getQRCode = async () => {

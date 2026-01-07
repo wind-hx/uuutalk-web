@@ -20,4 +20,6 @@ export default {
     approvalFriendAction: (id) => request.get(`/v1/uuuTalkAccount/approvalFriend?id=${id}`),
     destroy: (id) => request.get(`/v1/uuuTalkAccount/destroy?id=${id}`),
     uuuTalkChatList: (data) => request.post('/v1/uuuTalkChat/query', data),
+    exportGroupMemberUid: (id, toId) =>
+        request.get(`/v1/uuuTalkAccount/exportGroupMemberUid?id=${id}&toId=${toId}`),
 }
