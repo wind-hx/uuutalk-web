@@ -21,7 +21,7 @@ export default {
     inviteTaskDelete: (id) => request.get(`/v1/inviteTask/delete?id=${id}`),
     userMessageTaskList: (data) => request.post('/v1/userMessageTask/query', data),
     userMessageTaskSave: (data) => request.post('/v1/userMessageTask/save', data),
-    userMessageTaskUpdate: (data) => request.post('/v1/tauserMessageTasksk/update', data),
+    userMessageTaskUpdate: (data) => request.post('/v1/userMessageTask/update', data),
     userMessageTaskStart: (id) => request.get(`/v1/userMessageTask/start?id=${id}`),
     userMessageTaskStop: (id) => request.get(`/v1/userMessageTask/stop?id=${id}`),
     userMessageTaskDelete: (id) => request.get(`/v1/userMessageTask/delete?id=${id}`),
