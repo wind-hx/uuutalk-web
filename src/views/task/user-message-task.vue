@@ -476,11 +476,7 @@ const sendRecordColumns = ref([
 		key: "title",
 		width: 160,
 		render(row) {
-			if (row.senderLastName) {
-				return row.senderFirstName + '-' + row.senderLastName;
-			} else {
-				return row.senderFirstName;
-			}
+			return row.senderNickName;
 		}
 	},
 	{
